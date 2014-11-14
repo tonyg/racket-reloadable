@@ -62,17 +62,24 @@
     #t))
 
 (define (make-reloadable-entry-point name module-path [identifier-symbol name])
-  (when (hash-has-key? reloadable-entry-points name)
-    (error 'make-reloadable-entry-point "Duplicate reloadable-entry-point name ~a" name))
+  (define key (list module-path name))
+  (when (hash-has-key? reloadable-entry-points key)
+    (error 'make-reloadable-entry-point
+           "Duplicate reloadable-entry-point name ~a in module ~a"
+           name
+           module-path))
   (define e (reloadable-entry-point name module-path identifier-symbol #f))
-  (hash-set! reloadable-entry-points name e)
+  (hash-set! reloadable-entry-points key e)
   e)
 
-(define (lookup-reloadable-entry-point name)
+(define (lookup-reloadable-entry-point name module-path)
   (hash-ref reloadable-entry-points
-            name
+            (list module-path name)
             (lambda ()
-              (error 'lookup-reloadable-entry-point "Reloadable-entry-point ~a not found" name))))
+              (error 'lookup-reloadable-entry-point
+                     "Reloadable-entry-point ~a not found in module ~a"
+                     name
+                     module-path))))
 
 (define (reloadable-entry-point->procedure e)
   (make-keyword-procedure
