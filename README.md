@@ -148,6 +148,13 @@ however, the problem goes away:
 	-> (equal? x1 x2)
 	#t
 
+Struct definitions from the permanent part of your program will never
+be reloaded, of course, so this warning doesn't apply to them. Pre-
+and post-reload routines share the same struct definition in that
+case. Likewise, struct definitions whose instances never survive
+across a code-reloading (i.e. that are never placed in the program's
+persistent state) can be non-prefab.
+
 ### Accessing reloadable code from permanent code
 
 Use the entry points you create with `make-reloadable-entry-point`
