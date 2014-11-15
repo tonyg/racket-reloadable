@@ -1,5 +1,7 @@
 # Code-reloading for Racket
 
+![Illustration of reloadable program](docs/reloadable-code.png)
+
 Racket's built-in `dynamic-rerequire` does the heavy lifting, but
 doesn't give a high-level interface to help us build reloadable
 servers. This package fills in that gap.
