@@ -100,6 +100,52 @@ Read and write persistent state values like you would parameters:
 (some-persistent-variable (compute-new-value))
 ```
 
+#### Use `#:prefab` structs for persistent state
+
+Make sure you use `#:prefab` structs for your persistent state:
+
+```racket
+(struct my-state-vector (field1 field2) #:prefab)
+```
+
+If you use *non*-prefab structs for persistent state, any newly-loaded
+code won't be able to recognise structs that were created by previous
+versions of the code.
+
+The reason for this is that non-prefab structs in Racket are
+*generative*, meaning that each time your code is reloaded, a new set
+of struct types are created.
+
+This transcript shows the problem:
+
+	Welcome to Racket v6.1.1.4.
+	-> (struct x () #:transparent)
+	-> (define x1 (x))
+	-> (struct x () #:transparent)
+	-> (define x2 (x))
+	-> (x? x2)
+	#t
+	-> (x? x1)
+	#f
+	-> (equal? x1 x2)
+	#f
+
+With
+[prefab structs](http://docs.racket-lang.org/guide/define-struct.html?q=prefab#%28part._prefab-struct%29),
+however, the problem goes away:
+
+	Welcome to Racket v6.1.1.4.
+	-> (struct x () #:prefab)
+	-> (define x1 (x))
+	-> (struct x () #:prefab)
+	-> (define x2 (x))
+	-> (x? x2)
+	#t
+	-> (x? x1)
+	#t
+	-> (equal? x1 x2)
+	#t
+
 ### Accessing reloadable code from permanent code
 
 Use the entry points you create with `make-reloadable-entry-point`
