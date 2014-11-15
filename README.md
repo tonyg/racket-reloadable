@@ -4,6 +4,17 @@ Racket's built-in `dynamic-rerequire` does the heavy lifting, but
 doesn't give a high-level interface to help us build reloadable
 servers. This package fills in that gap.
 
+## Example
+
+A complete example of a website written using the
+[Racket web-server](http://docs.racket-lang.org/web-server/) is
+available at <https://github.com/tonyg/racket-reloadable-example>.
+
+ - [`main.rkt`](https://github.com/tonyg/racket-reloadable-example/blob/master/src/main.rkt)
+   is the permanent part of the server
+ - [`site.rkt`](https://github.com/tonyg/racket-reloadable-example/blob/master/src/main.rkt)
+   is the reloadable part of the server
+
 ## Usage
 
 1. Split your server into a *permanent* and a *reloadable* part
