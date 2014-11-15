@@ -4,7 +4,7 @@ Racket's built-in `dynamic-rerequire` does the heavy lifting, but
 doesn't give a high-level interface to help us build reloadable
 servers. This package fills in that gap.
 
-## Example
+### Example
 
 A complete example of a website written using the
 [Racket web-server](http://docs.racket-lang.org/web-server/) is
