@@ -8,7 +8,8 @@ servers. This package fills in that gap.
 
 A complete example of a website written using the
 [Racket web-server](http://docs.racket-lang.org/web-server/) is
-available at <https://github.com/tonyg/racket-reloadable-example>.
+available at <https://github.com/tonyg/racket-reloadable-example>. The
+site uses this module to support runtime code-reloading.
 
  - [`main.rkt`](https://github.com/tonyg/racket-reloadable-example/blob/master/src/main.rkt)
    is the permanent part of the server
