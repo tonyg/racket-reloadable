@@ -100,9 +100,11 @@ Read and write persistent state values like you would parameters:
 (some-persistent-variable (compute-new-value))
 ```
 
-#### Use `#:prefab` structs for persistent state
+### Use `#:prefab` structs for persistent state
 
-Make sure you use `#:prefab` structs for your persistent state:
+Make sure you use
+[`#:prefab` structs](http://docs.racket-lang.org/guide/define-struct.html?q=prefab#%28part._prefab-struct%29)
+for your persistent state:
 
 ```racket
 (struct my-state-vector (field1 field2) #:prefab)
