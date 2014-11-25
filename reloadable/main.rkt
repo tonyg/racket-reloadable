@@ -10,6 +10,7 @@
          reloadable-entry-point->procedure
          make-persistent-state)
 
+(require racket/set)
 (require racket/match)
 (require racket/rerequire)
 (require (only-in web-server/private/util exn->string))
@@ -17,7 +18,12 @@
 (define reload-poll-interval 0.5) ;; seconds
 (define reload-failure-retry-delay (make-parameter 5)) ;; seconds
 
-(struct reloadable-entry-point (name module-path identifier-symbol [value #:mutable]) #:prefab)
+(struct reloadable-entry-point (name
+                                module-path
+                                identifier-symbol
+                                on-absent
+                                [value #:mutable])
+        #:prefab)
 
 (define reloadable-entry-points (make-hash))
 (define persistent-state (make-hash))
@@ -51,26 +57,31 @@
 
 ;; Only to be called from reloader-main
 (define (do-reload!)
+  (define module-paths (for/set ((e (in-hash-values reloadable-entry-points)))
+                         (reloadable-entry-point-module-path e)))
   (with-handlers ((exn:fail?
                    (lambda (e)
                      (log-error "*** WHILE RELOADING CODE***\n~a" (exn->string e))
                      #f)))
+    (for ((module-path (in-set module-paths)))
+      (dynamic-rerequire module-path #:verbosity 'all))
     (for ((e (in-hash-values reloadable-entry-points)))
-      (match-define (reloadable-entry-point _ module-path identifier-symbol _) e)
-      (dynamic-rerequire module-path #:verbosity 'all)
-      (set-reloadable-entry-point-value! e (dynamic-require module-path identifier-symbol)))
+      (match-define (reloadable-entry-point _ module-path identifier-symbol on-absent _) e)
+      (define new-value (if on-absent
+                            (dynamic-require module-path identifier-symbol on-absent)
+                            (dynamic-require module-path identifier-symbol)))
+      (set-reloadable-entry-point-value! e new-value))
     #t))
 
-(define (make-reloadable-entry-point name module-path [identifier-symbol name])
+(define (make-reloadable-entry-point name module-path [identifier-symbol name]
+                                     #:on-absent [on-absent #f])
   (define key (list module-path name))
-  (when (hash-has-key? reloadable-entry-points key)
-    (error 'make-reloadable-entry-point
-           "Duplicate reloadable-entry-point name ~a in module ~a"
-           name
-           module-path))
-  (define e (reloadable-entry-point name module-path identifier-symbol #f))
-  (hash-set! reloadable-entry-points key e)
-  e)
+  (hash-ref reloadable-entry-points
+            key
+            (lambda ()
+              (define e (reloadable-entry-point name module-path identifier-symbol on-absent #f))
+              (hash-set! reloadable-entry-points key e)
+              e)))
 
 (define (lookup-reloadable-entry-point name module-path)
   (hash-ref reloadable-entry-points
