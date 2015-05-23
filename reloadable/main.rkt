@@ -13,7 +13,6 @@
 (require racket/set)
 (require racket/match)
 (require racket/rerequire)
-(require (only-in web-server/private/util exn->string))
 
 (define reload-poll-interval 0.5) ;; seconds
 (define reload-failure-retry-delay (make-parameter 5)) ;; seconds
@@ -61,7 +60,10 @@
                          (reloadable-entry-point-module-path e)))
   (with-handlers ((exn:fail?
                    (lambda (e)
-                     (log-error "*** WHILE RELOADING CODE***\n~a" (exn->string e))
+                     (log-error "*** WHILE RELOADING CODE***\n~a"
+                                (parameterize ([current-error-port (open-output-string)])
+                                  ((error-display-handler) (exn-message e) e)
+                                  (get-output-string (current-error-port))))
                      #f)))
     (for ((module-path (in-set module-paths)))
       (dynamic-rerequire module-path #:verbosity 'all))
