@@ -8,7 +8,8 @@
          make-reloadable-entry-point
          lookup-reloadable-entry-point
          reloadable-entry-point->procedure
-         make-persistent-state)
+         make-persistent-state
+         make-persistent-state-destructor)
 
 (require racket/set)
 (require racket/match)
@@ -26,6 +27,7 @@
 
 (define reloadable-entry-points (make-hash))
 (define persistent-state (make-hash))
+(define persistent-state-destructor (make-hash))
 
 (define (set-reload-poll-interval! v)
   (set! reload-poll-interval v))
@@ -115,3 +117,16 @@
                    value]))
               (hash-set! persistent-state name handler)
               handler)))
+
+(define (make-persistent-state-destructor name initial-value-thunk destructor)
+  (when (hash-has-key? persistent-state-destructor name)
+    (destructor ((hash-ref persistent-state-destructor name))))
+  (define value (initial-value-thunk))
+  (define handler
+    (case-lambda
+      [() value]
+      [(new-value)
+       (set! value new-value)
+       value]))
+  (hash-set! persistent-state-destructor name handler)
+  handler)
