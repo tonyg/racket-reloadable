@@ -195,6 +195,12 @@ To disable this automatic scanning, call
 If automatic scanning is disabled, then calls to `reload!` will be the
 only way to make code reloading happen.
 
+### Reload hooks
+
+You can use `add-reload-hook!` and `remove-reload-hook!` to install or
+remove a "reload hook", a nullary procedure to be called every time a
+reload completes, if that reload actually loaded any new or changed code.
+
 ## Copyright and License
 
 Copyright &copy; 2014 Tony Garnock-Jones

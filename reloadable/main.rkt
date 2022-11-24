@@ -8,7 +8,9 @@
          make-reloadable-entry-point
          lookup-reloadable-entry-point
          reloadable-entry-point->procedure
-         make-persistent-state)
+         make-persistent-state
+         add-reload-hook!
+         remove-reload-hook!)
 
 (require racket/set)
 (require racket/match)
@@ -26,6 +28,7 @@
 
 (define reloadable-entry-points (make-hash))
 (define persistent-state (make-hash))
+(define reload-hooks (make-hasheq))
 
 (define (set-reload-poll-interval! v)
   (set! reload-poll-interval v))
@@ -65,14 +68,18 @@
                                   ((error-display-handler) (exn-message e) e)
                                   (get-output-string (current-error-port))))
                      #f)))
-    (for ((module-path (in-set module-paths)))
-      (dynamic-rerequire module-path #:verbosity 'all))
+    (define any-changed?
+      (for/or ((module-path (in-set module-paths)))
+        (pair? (dynamic-rerequire module-path #:verbosity 'all))))
     (for ((e (in-hash-values reloadable-entry-points)))
       (match-define (reloadable-entry-point _ module-path identifier-symbol on-absent _) e)
       (define new-value (if on-absent
                             (dynamic-require module-path identifier-symbol on-absent)
                             (dynamic-require module-path identifier-symbol)))
       (set-reloadable-entry-point-value! e new-value))
+    (when any-changed?
+      (for ((hook (in-hash-keys reload-hooks)))
+        (hook)))
     #t))
 
 (define (make-reloadable-entry-point name module-path [identifier-symbol name]
@@ -115,3 +122,9 @@
                    value]))
               (hash-set! persistent-state name handler)
               handler)))
+
+(define (add-reload-hook! hook)
+  (hash-set! reload-hooks hook #t))
+
+(define (remove-reload-hook! hook)
+  (hash-remove! reload-hooks hook))
