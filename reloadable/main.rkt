@@ -68,18 +68,21 @@
                                   ((error-display-handler) (exn-message e) e)
                                   (get-output-string (current-error-port))))
                      #f)))
-    (define any-changed?
-      (for/or ((module-path (in-set module-paths)))
-        (pair? (dynamic-rerequire module-path #:verbosity 'all))))
+    (define changed-paths
+      (for/fold [(h (hash))] ((module-path (in-set module-paths)))
+        (let ((paths (dynamic-rerequire module-path #:verbosity 'all)))
+          (if (null? paths)
+              h
+              (hash-set h module-path paths)))))
     (for ((e (in-hash-values reloadable-entry-points)))
       (match-define (reloadable-entry-point _ module-path identifier-symbol on-absent _) e)
       (define new-value (if on-absent
                             (dynamic-require module-path identifier-symbol on-absent)
                             (dynamic-require module-path identifier-symbol)))
       (set-reloadable-entry-point-value! e new-value))
-    (when any-changed?
+    (when (not (hash-empty? changed-paths))
       (for ((hook (in-hash-keys reload-hooks)))
-        (hook)))
+        (hook changed-paths)))
     #t))
 
 (define (make-reloadable-entry-point name module-path [identifier-symbol name]

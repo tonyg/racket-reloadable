@@ -198,8 +198,10 @@ only way to make code reloading happen.
 ### Reload hooks
 
 You can use `add-reload-hook!` and `remove-reload-hook!` to install or
-remove a "reload hook", a nullary procedure to be called every time a
-reload completes, if that reload actually loaded any new or changed code.
+remove a "reload hook", a procedure to be called every time a reload
+completes, if that reload actually loaded any new or changed code. Each
+hook procedure is called with a dictionary mapping a module path to a list
+of reloaded source file paths.
 
 ## Copyright and License
 
